@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аналог DropMeFiles</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <h1>Аналог DropMeFiles</h1>
+  <div class="upload-container">
+    <form id="uploadForm">
+      <label class="dropzone" id="dropzone">
+        <input id="fileInput" type="file" multiple>
+        <p class="strong">Перетащите файлы сюда или нажмите, чтобы выбрать</p>
+        <p>Файлы будут отправлены на сервер после нажатия кнопки</p>
+      </label>
+      <button type="submit" id="uploadButton" disabled>Загрузить</button>
+    </form>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
