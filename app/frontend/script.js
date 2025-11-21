@@ -54,7 +54,7 @@ uploadForm.addEventListener('submit', async (event) => {
   setStatus('Загрузка...', '');
 
   try {
-    const response = await fetch('http://192.168.0.132:5000/upload_file', {
+    const response = await fetch('/upload_file', {
       method: 'POST',
       body: formData
     });
