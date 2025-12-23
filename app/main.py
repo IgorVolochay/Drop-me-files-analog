@@ -1,8 +1,9 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.staticfiles import StaticFiles
 
 import dotenv
 import os
+import random
+import string
 
 import asyncio
 import uvicorn
@@ -18,11 +19,20 @@ app: FastAPI = FastAPI(title="DropMeFiles analog")
 #                     redoc_url=None if disable_docs else "/redoc",
 #                     openapi_url=None if disable_docs else "/openapi.json")
 
-# app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+data = dict()
 
 @app.post("/upload_file")
 async def create_upload_file(file: UploadFile = File(...)):
-    return {"filename": file.filename, "content_type": file.content_type}
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+    data[random_string] = file.filename
+    return {"filename": file.filename, "content_type": file.content_type, "id": random_string}
+
+@app.get("/{item_id}")
+async def read_item(item_id: str):
+    if item_id in data.keys():
+        return {"return": data[item_id]}
+    else:
+        return {"return": "NO DATA!"}
 
 async def main():
     config = uvicorn.Config("main:app", port=5000, host="0.0.0.0", log_level="debug")
