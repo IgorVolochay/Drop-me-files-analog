@@ -5,8 +5,10 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiobotocore>=2.26.0",
     "dotenv>=0.9.9",
     "fastapi>=0.121.1",
+    "minio>=7.2.20",
     "python-multipart>=0.0.20",
     "uvicorn>=0.38.0",
 ]
