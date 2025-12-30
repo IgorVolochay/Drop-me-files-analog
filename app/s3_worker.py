@@ -2,6 +2,7 @@ import os
 
 import asyncio
 
+from anyio import Condition
 from dotenv import load_dotenv
 from aiobotocore.session import get_session
 
@@ -18,6 +19,7 @@ class S3Worker:
         self._s3_client = None
 
         self.bucket = os.getenv('BUCKET_NAME')
+        self.max_file_size = os.getenv('MAX_FILES_SIZE')
 
     async def __aenter__(self):
         self._client = await self._s3_session.create_client(
@@ -40,13 +42,18 @@ class S3Worker:
             Body=data,
         )
 
-    async def generate_upload_url(self, key: str, content_type: str, expires_in: int = 300) -> str:
-        return await self._client.generate_presigned_url("put_object",
-            Params={
-                "Bucket": self.bucket,
-                "Key": key,
-                "ContentType": content_type,
+    async def generate_upload_post(self, key: str, content_type: str, expires_in: int = 300) -> dict:
+        return await self._client.generate_presigned_post(
+            Bucket=self.bucket,
+            Key=key,
+            Fields={
+                "Content-Type": content_type,
+                "acl": "private",
             },
+            Conditions=[
+                ["content-length-range", 0, self.max_file_size],
+                {"acl": "private"},
+            ],
             ExpiresIn=expires_in,
         )
 
@@ -78,7 +85,7 @@ async def test_run():
 
         url = await worker.generate_download_url("test.txt", "hello.txt")
         print(url)
-        url = await worker.generate_upload_url("some.jpg", content_type="image/jpeg")
+        url = await worker.generate_upload_post("some.jpg", content_type="image/jpeg")
         print(url)
         url = await worker.generate_download_url("some.jpg", "image.jpg")
         print(url)
