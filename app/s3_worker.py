@@ -2,7 +2,6 @@ import os
 
 import asyncio
 
-from anyio import Condition
 from dotenv import load_dotenv
 from aiobotocore.session import get_session
 
@@ -75,9 +74,9 @@ class S3Worker:
             ExpiresIn=expires_in,
         )
 
-
+s3_worker = S3Worker()
 async def test_run():
-    async with S3Worker() as worker:
+    async with s3_worker as worker:
         await worker.upload_file("test.txt", b"hello")
         file = await worker.download_file("test.txt")
         file_text = await file["Body"].read()
