@@ -7,17 +7,28 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <h1>Аналог DropMeFiles</h1>
-  <div class="upload-container">
-    <form id="uploadForm">
-      <label class="dropzone" id="dropzone">
-        <input id="fileInput" type="file" multiple>
-        <p class="strong">Перетащите файлы сюда или нажмите, чтобы выбрать</p>
-        <p>Файлы будут отправлены на сервер после нажатия кнопки</p>
-      </label>
-      <button type="submit" id="uploadButton" disabled>Загрузить</button>
-    </form>
-    <div class="status" id="status"></div>
+  <div id="uploadPage">
+    <h1>Аналог DropMeFiles</h1>
+    <div class="upload-container">
+      <form id="uploadForm">
+        <label class="dropzone" id="dropzone">
+          <input id="fileInput" type="file">
+          <p class="strong">Перетащите файл сюда или нажмите, чтобы выбрать</p>
+          <p>Максимальный размер файла: <span id="maxFileSize">загрузка...</span></p>
+        </label>
+        <button type="submit" id="uploadButton" disabled>Загрузить</button>
+      </form>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <div id="downloadPage" style="display: none;">
+    <h1>Скачать файл</h1>
+    <div class="upload-container">
+      <div id="downloadContent">
+        <div class="status" id="downloadStatus">Загрузка...</div>
+      </div>
+    </div>
   </div>
 
   <script src="./script.js"></script>
