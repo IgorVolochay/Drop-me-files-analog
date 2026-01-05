@@ -28,7 +28,7 @@ redis_worker = RedisWorker()
 
 
 @app.get("/upload_token", status_code=200)
-async def get_upload_token(file_name: str, file_type: str, file_size: int, response: Response, request: Request) -> UploadToken | BaseResponse:
+async def get_upload_token(file_name: str, file_type: str, file_size: int, response: Response, request: Request) -> BaseResponse:
     if file_size > int(os.getenv('MAX_FILES_SIZE')):
         response.status_code = status.HTTP_413_CONTENT_TOO_LARGE
         return BaseResponse(result="The uploaded file is too large", error=True)
@@ -47,7 +47,32 @@ async def get_upload_token(file_name: str, file_type: str, file_size: int, respo
 
     redis_worker.create_record(user_ip, file_name, file_uuid, file_type, datetime.now().isoformat(), file_size)
     print(post_data)
-    return UploadToken.model_validate(post_data)
+    return BaseResponse(result={"data": post_data, "file_uuid": file_uuid, "comment": "Ok"})
+
+@app.get("/max_file_size", status_code=200)
+def get_max_file_size() -> int:
+    return int(os.getenv('MAX_FILES_SIZE'))
+
+
+@app.get("/get_download_link/{file_uuid}", status_code=200)
+async def get_file_by_uuid(file_uuid:str, response: Response, request: Request) -> BaseResponse:
+    if len(file_uuid) != 6:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return BaseResponse(result="The file UUID must be 6 characters long",  error=True)
+    redis_data = redis_worker.get_record(file_uuid)
+    if not redis_data:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return BaseResponse(result={"data": None, "comment": "File with this UUID not found"}, error=True)
+
+    async with s3_worker as worker:
+        try:
+            download_url = await worker.generate_download_url(file_uuid, redis_data["file_name"])
+        except Exception as exception:
+            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            return BaseResponse(result="Error generating S3 access token. Error: " + str(exception), error=True)
+
+    return BaseResponse(result={"data": {"url": download_url, "file_name": redis_data["file_name"], "file_size": redis_data["file_size"]}, "comment": "Ok"})
+
 
 async def main():
     config = uvicorn.Config("main:app", port=5000, host="0.0.0.0", log_level="debug")

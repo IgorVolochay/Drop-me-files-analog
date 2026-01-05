@@ -34,5 +34,5 @@ class RedisWorker:
 
 if __name__ == "__main__":
     worker = RedisWorker()
-    worker.create_record("127.0.0.1", "some.jpg", "QWERTY", "image/jpeg", datetime.now().isoformat())
+    worker.create_record("127.0.0.1", "some.jpg", "QWERTY", "image/jpeg", datetime.now().isoformat(), file_size=1024)
     print(worker.get_record("QWERTY"))
