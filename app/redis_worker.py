@@ -13,7 +13,11 @@ class RedisWorker:
             port=int(os.getenv('REDIS_PORT')),
             username=os.getenv('REDIS_USERNAME'),
             password=os.getenv('REDIS_PASSWORD'),
-            decode_responses=True
+            decode_responses=True,
+            socket_timeout=10,
+            socket_connect_timeout=10,
+            retry_on_timeout=True,
+            max_connections=50
         )
         self.files_ttl = int(os.getenv('FILES_TTL'))
 
