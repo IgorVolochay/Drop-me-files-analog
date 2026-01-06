@@ -164,6 +164,10 @@ button:disabled {
 
 .status.error {
   color: #dc2626;
+  font-size: 18px;
+  font-weight: 500;
+  white-space: pre-line;
+  line-height: 1.6;
 }
 
 .status.success {

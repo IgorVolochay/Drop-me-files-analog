@@ -11,7 +11,8 @@ function formatBytes(bytes) {
 
 // Check if we're on the download page
 const path = window.location.pathname;
-const downloadMatch = path.match(/^\/get\/([a-zA-Z0-9]{6})$/);
+// Match /get/ followed by any alphanumeric characters (not just exactly 6)
+const downloadMatch = path.match(/^\/get\/([a-zA-Z0-9]+)$/);
 
 if (downloadMatch) {
   // Show download page
@@ -32,28 +33,41 @@ async function handleDownloadPage(fileUuid) {
   const downloadStatus = document.getElementById('downloadStatus');
   const downloadContent = document.getElementById('downloadContent');
   
+  // Check UUID length first (must be exactly 6 characters)
+  if (fileUuid.length !== 6) {
+    downloadStatus.textContent = 'Мы не смогли ничего найти.\nПерепроверьте введенный адрес.';
+    downloadStatus.className = 'status error';
+    downloadStatus.style.display = 'block';
+    downloadContent.innerHTML = '';
+    return;
+  }
+  
+  // Show loading state
+  downloadStatus.textContent = 'Загрузка...';
+  downloadStatus.className = 'status';
+  downloadStatus.style.display = 'block';
+  downloadContent.innerHTML = '';
+  
   try {
     const response = await fetch(`/api/get_download_link/${fileUuid}`);
     
     // Check for network/connection errors
     if (!response.ok && (response.status === 0 || response.status >= 500)) {
-      downloadStatus.textContent = 'Сервис временно недоступен, приносим наши извинения.';
+      downloadStatus.textContent = 'Сервис временно недоступен,\nприносим наши извинения.';
       downloadStatus.className = 'status error';
       downloadStatus.style.display = 'block';
+      downloadContent.innerHTML = '';
       return;
     }
     
     const data = await response.json();
     
-    if (data.error || !data.result || !data.result.data) {
-      // Check if it's a 404 or file not found error
-      if (response.status === 404 || data.result?.comment?.includes('not found') || data.result?.comment?.includes('не найден')) {
-        downloadStatus.textContent = 'Мы не смогли ничего найти. Перепроверьте введенный адрес.';
-      } else {
-        downloadStatus.textContent = 'Мы не смогли ничего найти. Перепроверьте введенный адрес.';
-      }
+    // Check for errors (400, 404, or error flag in response)
+    if (data.error || !data.result || !data.result.data || response.status === 400 || response.status === 404) {
+      downloadStatus.textContent = 'Мы не смогли ничего найти.\nПерепроверьте введенный адрес.';
       downloadStatus.className = 'status error';
       downloadStatus.style.display = 'block';
+      downloadContent.innerHTML = '';
       return;
     }
     
@@ -102,7 +116,7 @@ async function handleDownloadPage(fileUuid) {
     downloadStatus.style.display = 'none';
   } catch (error) {
     // Network error or other connection issues
-    downloadStatus.textContent = 'Сервис временно недоступен, приносим наши извинения.';
+    downloadStatus.textContent = 'Сервис временно недоступен,\nприносим наши извинения.';
     downloadStatus.className = 'status error';
     downloadStatus.style.display = 'block';
   }
