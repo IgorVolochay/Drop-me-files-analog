@@ -8,25 +8,43 @@
 </head>
 <body>
   <div id="uploadPage">
-    <h1>Аналог DropMeFiles</h1>
-    <div class="upload-container">
+    <div id="errorPopup" class="error-popup" style="display: none;"></div>
+    <div class="page-content">
+      <h1>Аналог DropMeFiles</h1>
+      <div class="upload-container">
       <form id="uploadForm">
         <label class="dropzone" id="dropzone">
           <input id="fileInput" type="file">
           <p class="strong">Перетащите файл сюда или нажмите, чтобы выбрать</p>
           <p>Максимальный размер файла: <span id="maxFileSize">загрузка...</span></p>
         </label>
-        <button type="submit" id="uploadButton" disabled>Загрузить</button>
+        <div class="button-container">
+          <button type="submit" id="uploadButton" disabled>Загрузить</button>
+        </div>
       </form>
+      <div id="successContent" class="success-content" style="display: none;">
+        <div class="file-info">
+          <h2 id="successFileName"></h2>
+          <p class="file-size" id="successFileSize"></p>
+          <div class="download-link-container">
+            <input type="text" id="downloadLinkInput" readonly class="download-link-input">
+            <button type="button" id="copyLinkButton" class="copy-link-button">Копировать</button>
+          </div>
+          <button type="button" id="uploadAnotherButton" class="upload-another-button">Загрузить другой файл</button>
+        </div>
+      </div>
       <div class="status" id="status"></div>
+      </div>
     </div>
   </div>
 
   <div id="downloadPage" style="display: none;">
-    <h1>Скачать файл</h1>
-    <div class="upload-container">
-      <div id="downloadContent">
-        <div class="status" id="downloadStatus">Загрузка...</div>
+    <div class="page-content">
+      <h1>Скачать файл</h1>
+      <div class="upload-container">
+        <div id="downloadContent">
+          <div class="status" id="downloadStatus">Загрузка...</div>
+        </div>
       </div>
     </div>
   </div>

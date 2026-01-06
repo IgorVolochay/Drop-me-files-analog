@@ -34,10 +34,24 @@ async function handleDownloadPage(fileUuid) {
   
   try {
     const response = await fetch(`/api/get_download_link/${fileUuid}`);
+    
+    // Check for network/connection errors
+    if (!response.ok && (response.status === 0 || response.status >= 500)) {
+      downloadStatus.textContent = 'Сервис временно недоступен, приносим наши извинения.';
+      downloadStatus.className = 'status error';
+      downloadStatus.style.display = 'block';
+      return;
+    }
+    
     const data = await response.json();
     
     if (data.error || !data.result || !data.result.data) {
-      downloadStatus.textContent = data.result?.comment || data.result || 'Ошибка при получении файла';
+      // Check if it's a 404 or file not found error
+      if (response.status === 404 || data.result?.comment?.includes('not found') || data.result?.comment?.includes('не найден')) {
+        downloadStatus.textContent = 'Мы не смогли ничего найти. Перепроверьте введенный адрес.';
+      } else {
+        downloadStatus.textContent = 'Мы не смогли ничего найти. Перепроверьте введенный адрес.';
+      }
       downloadStatus.className = 'status error';
       downloadStatus.style.display = 'block';
       return;
@@ -87,10 +101,23 @@ async function handleDownloadPage(fileUuid) {
     
     downloadStatus.style.display = 'none';
   } catch (error) {
-    downloadStatus.textContent = `Ошибка: ${error.message}`;
+    // Network error or other connection issues
+    downloadStatus.textContent = 'Сервис временно недоступен, приносим наши извинения.';
     downloadStatus.className = 'status error';
     downloadStatus.style.display = 'block';
   }
+}
+
+// Show error popup
+function showErrorPopup(message) {
+  const popup = document.getElementById('errorPopup');
+  popup.textContent = message;
+  popup.style.display = 'block';
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    popup.style.display = 'none';
+  }, 5000);
 }
 
 // Upload page initialization
@@ -101,6 +128,8 @@ function initUploadPage() {
   const uploadForm = document.getElementById('uploadForm');
   const statusDiv = document.getElementById('status');
   const maxFileSizeSpan = document.getElementById('maxFileSize');
+  const successContent = document.getElementById('successContent');
+  const uploadFormContainer = uploadForm.parentElement;
   
   let maxFileSizeBytes = 0;
   
@@ -133,7 +162,8 @@ function initUploadPage() {
     
     const file = fileInput.files[0];
     if (file.size > maxFileSizeBytes && maxFileSizeBytes > 0) {
-      setStatus(`Файл слишком большой. Максимальный размер: ${formatBytes(maxFileSizeBytes)}`, 'error');
+      const errorMsg = `Файл слишком большой. Максимальный размер: ${formatBytes(maxFileSizeBytes)}`;
+      showErrorPopup(errorMsg);
       uploadButton.disabled = true;
       return;
     }
@@ -145,6 +175,52 @@ function initUploadPage() {
   const setStatus = (message, type = '') => {
     statusDiv.textContent = message;
     statusDiv.className = type ? `status ${type}` : 'status';
+    // Hide status div when empty to avoid unnecessary spacing
+    if (!message || message.trim() === '') {
+      statusDiv.style.display = 'none';
+    } else {
+      statusDiv.style.display = 'block';
+    }
+  };
+  
+  const showSuccessState = (fileName, fileSize, downloadUrl) => {
+    // Hide the form
+    uploadForm.style.display = 'none';
+    statusDiv.style.display = 'none';
+    
+    // Show success content
+    document.getElementById('successFileName').textContent = fileName;
+    document.getElementById('successFileSize').textContent = `Размер: ${formatBytes(fileSize)}`;
+    document.getElementById('downloadLinkInput').value = downloadUrl;
+    successContent.style.display = 'block';
+    
+    // Setup copy button
+    const copyButton = document.getElementById('copyLinkButton');
+    copyButton.onclick = () => {
+      const input = document.getElementById('downloadLinkInput');
+      input.select();
+      input.setSelectionRange(0, 99999); // For mobile devices
+      document.execCommand('copy');
+      
+      const originalText = copyButton.textContent;
+      copyButton.textContent = 'Скопировано!';
+      copyButton.classList.add('copied');
+      
+      setTimeout(() => {
+        copyButton.textContent = originalText;
+        copyButton.classList.remove('copied');
+      }, 2000);
+    };
+    
+    // Setup "upload another" button
+    const uploadAnotherButton = document.getElementById('uploadAnotherButton');
+    uploadAnotherButton.onclick = () => {
+      // Reset form
+      uploadForm.style.display = 'block';
+      successContent.style.display = 'none';
+      fileInput.value = '';
+      updateButtonState();
+    };
   };
   
   dropzone.addEventListener('dragover', (event) => {
@@ -177,14 +253,14 @@ function initUploadPage() {
     event.preventDefault();
     
     if (!fileInput.files || fileInput.files.length === 0) {
-      setStatus('Выберите файл для загрузки.', 'error');
+      showErrorPopup('Выберите файл для загрузки.');
       return;
     }
     
     const file = fileInput.files[0];
     
     if (maxFileSizeBytes > 0 && file.size > maxFileSizeBytes) {
-      setStatus(`Файл слишком большой. Максимальный размер: ${formatBytes(maxFileSizeBytes)}`, 'error');
+      showErrorPopup(`Файл слишком большой. Максимальный размер: ${formatBytes(maxFileSizeBytes)}`);
       return;
     }
     
@@ -199,13 +275,22 @@ function initUploadPage() {
       
       if (!tokenResponse.ok) {
         const errorData = await tokenResponse.json().catch(() => ({}));
-        throw new Error(errorData.result?.comment || `Ошибка сервера: ${tokenResponse.status}`);
+        // Extract error message without status codes
+        let errorMessage = errorData.result || 'Ошибка при загрузке файла';
+        if (typeof errorMessage === 'object' && errorMessage.comment) {
+          errorMessage = errorMessage.comment;
+        }
+        if (typeof errorMessage === 'string' && errorMessage.includes('too large')) {
+          errorMessage = 'Файл слишком большой';
+        }
+        throw new Error(errorMessage);
       }
       
       const tokenData = await tokenResponse.json();
       
       if (tokenData.error || !tokenData.result || !tokenData.result.data) {
-        throw new Error(tokenData.result?.comment || 'Ошибка при получении токена загрузки');
+        let errorMessage = tokenData.result?.comment || 'Ошибка при получении токена загрузки';
+        throw new Error(errorMessage);
       }
       
       const uploadData = tokenData.result.data;
@@ -230,17 +315,28 @@ function initUploadPage() {
       });
       
       if (!uploadResponse.ok) {
-        throw new Error(`Ошибка загрузки на S3: ${uploadResponse.status}`);
+        throw new Error('Ошибка при загрузке файла на сервер');
       }
       
       // Success!
       const downloadUrl = `${window.location.origin}/get/${fileUuid}`;
-      setStatus(`Файл успешно загружен! UUID: ${fileUuid}. Ссылка для скачивания: ${downloadUrl}`, 'success');
+      showSuccessState(file.name, file.size, downloadUrl);
       fileInput.value = '';
-      updateButtonState();
       
     } catch (error) {
-      setStatus(`Не удалось загрузить файл: ${error.message}`, 'error');
+      // Extract clean error message without status codes
+      let errorMessage = error.message;
+      if (errorMessage.includes('status') || errorMessage.match(/\d{3}/)) {
+        if (errorMessage.includes('too large') || errorMessage.includes('413')) {
+          errorMessage = 'Файл слишком большой';
+        } else if (errorMessage.includes('500')) {
+          errorMessage = 'Ошибка сервера. Попробуйте позже';
+        } else {
+          errorMessage = 'Не удалось загрузить файл';
+        }
+      }
+      showErrorPopup(errorMessage);
+      setStatus('', '');
     } finally {
       uploadButton.disabled = false;
     }
