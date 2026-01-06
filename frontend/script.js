@@ -72,16 +72,61 @@ async function handleDownloadPage(fileUuid) {
     }
     
     const fileData = data.result.data;
+    const fileSize = parseInt(fileData.file_size);
     
-    // Create download button handler
+    // Create download button handler with progress tracking
     const handleDownload = async () => {
+      const downloadButton = document.getElementById('downloadButton');
+      const downloadProgress = document.getElementById('downloadProgress');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      
+      // For small files (< 10MB), use direct download (browser's native download)
+      // For larger files, show progress bar
+      if (fileSize < 10 * 1024 * 1024) {
+        // Small file - use direct download with browser's native progress
+        const link = document.createElement('a');
+        link.href = fileData.url;
+        link.download = fileData.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+      
+      // Large file - download with progress tracking
       try {
-        // For presigned URLs, we fetch the file and create a blob URL
+        downloadButton.disabled = true;
+        downloadProgress.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
+        
         const response = await fetch(fileData.url);
         if (!response.ok) {
           throw new Error('Ошибка при загрузке файла');
         }
-        const blob = await response.blob();
+        
+        const contentLength = response.headers.get('content-length');
+        const total = contentLength ? parseInt(contentLength, 10) : fileSize;
+        let loaded = 0;
+        
+        const reader = response.body.getReader();
+        const chunks = [];
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          chunks.push(value);
+          loaded += value.length;
+          
+          const percent = Math.round((loaded / total) * 100);
+          progressBar.style.width = percent + '%';
+          progressText.textContent = `${percent}% (${formatBytes(loaded)} / ${formatBytes(total)})`;
+        }
+        
+        // Combine chunks into blob
+        const blob = new Blob(chunks);
         const blobUrl = window.URL.createObjectURL(blob);
         
         const link = document.createElement('a');
@@ -91,9 +136,18 @@ async function handleDownloadPage(fileUuid) {
         link.click();
         document.body.removeChild(link);
         
-        // Clean up the blob URL
+        // Clean up
         window.URL.revokeObjectURL(blobUrl);
+        downloadProgress.style.display = 'none';
+        downloadButton.disabled = false;
+        progressText.textContent = 'Загрузка завершена!';
+        
+        setTimeout(() => {
+          progressText.textContent = '';
+        }, 2000);
       } catch (error) {
+        downloadProgress.style.display = 'none';
+        downloadButton.disabled = false;
         // Fallback: try direct navigation
         window.location.href = fileData.url;
       }
