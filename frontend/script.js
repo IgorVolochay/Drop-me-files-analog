@@ -37,25 +37,59 @@ async function handleDownloadPage(fileUuid) {
     const data = await response.json();
     
     if (data.error || !data.result || !data.result.data) {
-      downloadStatus.textContent = data.result?.comment || 'Ошибка при получении файла';
+      downloadStatus.textContent = data.result?.comment || data.result || 'Ошибка при получении файла';
       downloadStatus.className = 'status error';
+      downloadStatus.style.display = 'block';
       return;
     }
     
     const fileData = data.result.data;
+    
+    // Create download button handler
+    const handleDownload = async () => {
+      try {
+        // For presigned URLs, we fetch the file and create a blob URL
+        const response = await fetch(fileData.url);
+        if (!response.ok) {
+          throw new Error('Ошибка при загрузке файла');
+        }
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileData.file_name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+        // Fallback: try direct navigation
+        window.location.href = fileData.url;
+      }
+    };
+    
     downloadContent.innerHTML = `
       <div class="file-info">
         <h2>${fileData.file_name}</h2>
         <p class="file-size">Размер: ${formatBytes(parseInt(fileData.file_size))}</p>
-        <a href="${fileData.url}" download="${fileData.file_name}" class="download-button">
-          Скачать файл
-        </a>
+        <button type="button" id="downloadButton" class="download-button">
+          Загрузить
+        </button>
       </div>
     `;
+    
+    // Attach click handler to the download button
+    const downloadButton = document.getElementById('downloadButton');
+    downloadButton.addEventListener('click', handleDownload);
+    
     downloadStatus.style.display = 'none';
   } catch (error) {
     downloadStatus.textContent = `Ошибка: ${error.message}`;
     downloadStatus.className = 'status error';
+    downloadStatus.style.display = 'block';
   }
 }
 

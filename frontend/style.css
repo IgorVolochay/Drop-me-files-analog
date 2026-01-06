@@ -137,6 +137,7 @@ button:disabled {
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
 }
 
 .download-button:hover {
@@ -144,3 +145,6 @@ button:disabled {
   box-shadow: 0 16px 32px -24px rgba(99, 102, 241, 0.8);
 }
 
+.download-button:active {
+  transform: translateY(0);
+}
