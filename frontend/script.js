@@ -33,7 +33,7 @@ async function handleDownloadPage(fileUuid) {
   const downloadContent = document.getElementById('downloadContent');
   
   try {
-    const response = await fetch(`/get_download_link/${fileUuid}`);
+    const response = await fetch(`/api/get_download_link/${fileUuid}`);
     const data = await response.json();
     
     if (data.error || !data.result || !data.result.data) {
@@ -73,7 +73,7 @@ function initUploadPage() {
   // Fetch max file size on page load
   async function loadMaxFileSize() {
     try {
-      const response = await fetch('/max_file_size');
+      const response = await fetch('/api/max_file_size');
       if (!response.ok) {
         throw new Error(`Ошибка сервера: ${response.status}`);
       }
@@ -160,7 +160,7 @@ function initUploadPage() {
     
     try {
       // Step 1: Get upload token
-      const tokenUrl = `/upload_token?file_name=${encodeURIComponent(file.name)}&file_type=${encodeURIComponent(file.type)}&file_size=${file.size}`;
+      const tokenUrl = `/api/upload_token?file_name=${encodeURIComponent(file.name)}&file_type=${encodeURIComponent(file.type)}&file_size=${file.size}`;
       const tokenResponse = await fetch(tokenUrl);
       
       if (!tokenResponse.ok) {
@@ -176,6 +176,8 @@ function initUploadPage() {
       
       const uploadData = tokenData.result.data;
       const fileUuid = tokenData.result.file_uuid;
+      uploadData.fields["key"] = fileUuid;
+      delete uploadData.fields["Content-Type"];
       
       setStatus('Загрузка файла на сервер...', '');
       

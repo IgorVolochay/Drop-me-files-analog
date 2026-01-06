@@ -38,12 +38,11 @@ async def get_upload_token(file_name: str, file_type: str, file_size: int, respo
 
     user_ip = request.client.host
     file_uuid = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-    async with s3_worker as worker:
-        try:
-            post_data = await worker.generate_upload_post(file_name, content_type=file_type)
-        except Exception as exception:
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            return BaseResponse(result="Error generating S3 access token. Error: " + str(exception), error=True)
+    try:
+        post_data = await s3_worker.generate_upload_post(file_uuid, content_type=file_type)
+    except Exception as exception:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return BaseResponse(result="Error generating S3 access token. Error: " + str(exception), error=True)
 
     redis_worker.create_record(user_ip, file_name, file_uuid, file_type, datetime.now().isoformat(), file_size)
     print(post_data)
@@ -64,18 +63,17 @@ async def get_file_by_uuid(file_uuid:str, response: Response, request: Request) 
         response.status_code = status.HTTP_400_BAD_REQUEST
         return BaseResponse(result={"data": None, "comment": "File with this UUID not found"}, error=True)
 
-    async with s3_worker as worker:
-        try:
-            download_url = await worker.generate_download_url(file_uuid, redis_data["file_name"])
-        except Exception as exception:
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            return BaseResponse(result="Error generating S3 access token. Error: " + str(exception), error=True)
+    try:
+        download_url = await s3_worker.generate_download_url(file_uuid, redis_data["file_name"])
+    except Exception as exception:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        return BaseResponse(result="Error generating S3 access token. Error: " + str(exception), error=True)
 
     return BaseResponse(result={"data": {"url": download_url, "file_name": redis_data["file_name"], "file_size": redis_data["file_size"]}, "comment": "Ok"})
 
 
 async def main():
-    config = uvicorn.Config("main:app", port=5000, host="0.0.0.0", log_level="debug")
+    config = uvicorn.Config("main:app", port=int(os.getenv('BACKEND_PORT')), host="0.0.0.0", log_level="debug")
     server = uvicorn.Server(config)
     await server.serve()
 
