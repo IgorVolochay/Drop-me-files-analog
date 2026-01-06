@@ -15,6 +15,13 @@ body {
   padding: 24px;
 }
 
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+    justify-content: center;
+  }
+}
+
 .page-content {
   display: flex;
   flex-direction: column;
@@ -30,6 +37,13 @@ h1 {
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  h1 {
+    font-size: clamp(24px, 6vw, 32px);
+    margin: 0 0 24px 0;
+  }
+}
+
 .upload-container {
   width: min(640px, 100%);
   background: #ffffffdd;
@@ -40,6 +54,14 @@ h1 {
   flex-direction: column;
   gap: 24px;
   backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 20px;
+    gap: 16px;
+    border-radius: 16px;
+  }
 }
 
 .dropzone {
@@ -53,6 +75,13 @@ h1 {
   position: relative;
   display: block;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .dropzone {
+    padding: 32px 16px;
+    border-radius: 12px;
+  }
 }
 
 .dropzone:focus,
@@ -130,6 +159,17 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  button {
+    padding: 16px 24px;
+    font-size: 16px;
+    min-height: 48px;
+    width: 100%;
+  }
 }
 
 button:hover:not(:disabled) {
@@ -204,6 +244,16 @@ button:disabled {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .download-button {
+    padding: 16px 24px;
+    width: 100%;
+    min-height: 48px;
+  }
 }
 
 .download-button:hover {
@@ -246,6 +296,53 @@ button:disabled {
   }
 }
 
+@media (max-width: 768px) {
+  .error-popup {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .status {
+    font-size: 14px;
+  }
+  
+  .status.error {
+    font-size: 16px;
+  }
+  
+  .file-info h2 {
+    font-size: 20px;
+  }
+  
+  .file-size {
+    font-size: 14px;
+  }
+  
+  .dropzone p {
+    font-size: 14px;
+  }
+  
+  .dropzone p.strong {
+    font-size: 16px;
+  }
+}
+
 /* Success content */
 .success-content {
   animation: fadeIn 0.3s ease-in;
@@ -282,6 +379,15 @@ button:disabled {
   cursor: text;
 }
 
+@media (max-width: 768px) {
+  .download-link-input {
+    width: 100%;
+    min-width: 0;
+    font-size: 12px;
+    padding: 14px;
+  }
+}
+
 .download-link-input:focus {
   outline: none;
   border-color: #6366f1;
@@ -299,6 +405,16 @@ button:disabled {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .copy-link-button {
+    width: 100%;
+    padding: 14px 24px;
+    min-height: 48px;
+  }
 }
 
 .copy-link-button:hover {
@@ -325,6 +441,16 @@ button:disabled {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .upload-another-button {
+    width: 100%;
+    padding: 14px 24px;
+    min-height: 48px;
+  }
 }
 
 .upload-another-button:hover {
@@ -362,4 +488,83 @@ button:disabled {
   color: #6b7280;
   margin: 0;
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .status {
+    font-size: 14px;
+  }
+  
+  .status.error {
+    font-size: 16px;
+  }
+  
+  .file-info h2 {
+    font-size: 20px;
+  }
+  
+  .file-size {
+    font-size: 14px;
+  }
+  
+  .dropzone p {
+    font-size: 14px;
+  }
+  
+  .dropzone p.strong {
+    font-size: 16px;
+  }
+  
+  .error-popup {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    transform: none;
+    max-width: none;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .progress-text {
+    font-size: 12px;
+  }
+  
+  .button-container {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+  
+  h1 {
+    font-size: 22px;
+    margin: 0 0 20px 0;
+  }
+  
+  .upload-container {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .dropzone {
+    padding: 24px 12px;
+  }
+  
+  .file-info {
+    padding: 16px;
+  }
 }

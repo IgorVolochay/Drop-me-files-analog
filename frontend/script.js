@@ -366,25 +366,57 @@ function initUploadPage() {
       uploadData.fields["key"] = fileUuid;
       delete uploadData.fields["Content-Type"];
       
-      setStatus('Загрузка файла на сервер...', '');
+      // Hide status, show progress bar
+      statusDiv.style.display = 'none';
+      const uploadProgress = document.getElementById('uploadProgress');
+      const uploadProgressBar = document.getElementById('uploadProgressBar');
+      const uploadProgressText = document.getElementById('uploadProgressText');
+      uploadProgress.style.display = 'block';
+      uploadProgressBar.style.width = '0%';
+      uploadProgressText.textContent = '0%';
       
-      // Step 2: Upload to S3 using form-data
-      // Add all fields from the API response (order matters for S3, file should be last)
-      const formData = new FormData();
-      Object.keys(uploadData.fields).forEach(key => {
-        formData.append(key, uploadData.fields[key]);
+      // Step 2: Upload to S3 using XMLHttpRequest for progress tracking
+      await new Promise((resolve, reject) => {
+        const formData = new FormData();
+        Object.keys(uploadData.fields).forEach(key => {
+          formData.append(key, uploadData.fields[key]);
+        });
+        // File must be appended last
+        formData.append('file', file);
+        
+        const xhr = new XMLHttpRequest();
+        
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            uploadProgressBar.style.width = percent + '%';
+            uploadProgressText.textContent = `${percent}% (${formatBytes(event.loaded)} / ${formatBytes(event.total)})`;
+          }
+        });
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Ошибка загрузки: ${xhr.status}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Ошибка при загрузке файла на сервер'));
+        });
+        
+        xhr.addEventListener('abort', () => {
+          reject(new Error('Загрузка прервана'));
+        });
+        
+        xhr.open('POST', uploadData.url);
+        xhr.send(formData);
       });
-      // File must be appended last
-      formData.append('file', file);
       
-      const uploadResponse = await fetch(uploadData.url, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!uploadResponse.ok) {
-        throw new Error('Ошибка при загрузке файла на сервер');
-      }
+      // Hide progress bar after successful upload
+      uploadProgress.style.display = 'none';
       
       // Success!
       const downloadUrl = `${window.location.origin}/get/${fileUuid}`;
@@ -405,6 +437,11 @@ function initUploadPage() {
       }
       showErrorPopup(errorMessage);
       setStatus('', '');
+      // Hide progress bar on error
+      const uploadProgress = document.getElementById('uploadProgress');
+      if (uploadProgress) {
+        uploadProgress.style.display = 'none';
+      }
     } finally {
       uploadButton.disabled = false;
     }
