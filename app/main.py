@@ -8,6 +8,7 @@ import uvicorn
 
 from datetime import datetime
 from fastapi import FastAPI, Response, status, Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from schemas.api_schemas import *
 from s3_worker import S3Worker
@@ -26,6 +27,18 @@ app: FastAPI = FastAPI(title="DropMeFiles analog")
 s3_worker = S3Worker()
 redis_worker = RedisWorker()
 
+class RealIPMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            request.state.client_ip = forwarded.split(",")[0].strip()
+        else:
+            request.state.client_ip = request.headers.get("X-Real-IP", request.client.host)
+
+        response = await call_next(request)
+        return response
+app.add_middleware(RealIPMiddleware)
+
 
 @app.get("/upload_token", status_code=200)
 async def get_upload_token(file_name: str, file_type: str, file_size: int, response: Response, request: Request) -> BaseResponse:
@@ -36,7 +49,8 @@ async def get_upload_token(file_name: str, file_type: str, file_size: int, respo
         response.status_code = status.HTTP_400_BAD_REQUEST
         return BaseResponse(result="The file you are uploading is less than 1 byte, WTF?", error=True)
 
-    user_ip = request.client.host
+    user_ip = request.state.client_ip
+    print(user_ip)
     file_uuid = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
     try:
         post_data = await s3_worker.generate_upload_post(file_uuid, content_type=file_type)
