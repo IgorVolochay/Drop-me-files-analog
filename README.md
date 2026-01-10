@@ -26,6 +26,8 @@ Drop-me-files-analog позволяет пользователям:
 
 **Nginx**: служит веб-сервером для раздачи frontend и reverse proxy для backend.
 
+![Untitled](https://github.com/user-attachments/assets/2efb0a11-7a0c-486e-af03-b7da7ac225ac)
+
 Процесс работы:
 
 1. **Загрузка**: **Frontend** запрашивает токен, передавая метаданные файла. **Backend** генерирует короткий UUID и presigned POST URL для **MinIO**, сохраняет метаданные в **Redis** с TTL и возвращает URL и UUID. Frontend загружает файл напрямую в **MinIO**.
