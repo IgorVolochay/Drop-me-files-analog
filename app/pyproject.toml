@@ -3,11 +3,12 @@ name = "drop-me-files-analog"
 version = "0.1.0"
 description = ""
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
     "aiobotocore>=2.26.0",
     "dotenv>=0.9.9",
     "fastapi>=0.121.1",
+    "loguru>=0.7.3",
     "minio>=7.2.20",
     "pydantic>=2.12.5",
     "python-multipart>=0.0.20",
