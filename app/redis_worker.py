@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 import redis
 from dotenv import load_dotenv
@@ -34,9 +33,3 @@ class RedisWorker:
 
     def get_record(self, file_uuid:str):
         return self.client.hgetall(file_uuid)
-
-
-if __name__ == "__main__":
-    worker = RedisWorker()
-    worker.create_record("127.0.0.1", "some.jpg", "QWERTY", "image/jpeg", datetime.now().isoformat(), file_size=1024)
-    print(worker.get_record("QWERTY"))

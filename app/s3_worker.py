@@ -1,6 +1,5 @@
 import os
 
-import asyncio
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -43,7 +42,6 @@ class S3Worker:
                 ExpiresIn=expires_in,
             )
 
-
     async def generate_download_url(self, key: str, filename: str, expires_in: int = 300) -> str:
         async with self.get_client() as client:
             return await client.generate_presigned_url("get_object",
@@ -56,18 +54,3 @@ class S3Worker:
                 },
                 ExpiresIn=expires_in,
             )
-
-
-async def test_run():
-    worker = S3Worker()
-
-    url = await worker.generate_download_url("test.txt", "hello.txt")
-    print(url)
-    url = await worker.generate_upload_post("some.jpg", content_type="image/jpeg")
-    print(url)
-    url = await worker.generate_download_url("some.jpg", "image.jpg")
-    print(url)
-
-
-if __name__ == "__main__":
-    asyncio.run(test_run())

@@ -29,7 +29,7 @@ logger.add(sys.stdout,
 disable_docs = os.getenv("DISABLE_DOCS", "true").lower() == "true"
 app: FastAPI = FastAPI(title="DropMeFiles analog",
                     summary="OpenAPI schema for \"DropMeFiles analog\" project!",
-                    version="0.1",
+                    version="1.0",
                     contact={"GitHub": "https://github.com/IgorVolochay/Drop-me-files-analog"},
                     docs_url=None if disable_docs else "/docs",
                     redoc_url=None if disable_docs else "/redoc",
@@ -37,6 +37,8 @@ app: FastAPI = FastAPI(title="DropMeFiles analog",
 
 s3_worker = S3Worker()
 redis_worker = RedisWorker()
+
+max_file_size = int(os.getenv('MAX_FILES_SIZE', 1048576)) # 1 MB if None
 
 class RealIPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -55,7 +57,7 @@ app.add_middleware(RealIPMiddleware)
 async def get_upload_token(file_name: str, file_type: str, file_size: int, response: Response, request: Request) -> BaseResponse:
     user_ip = request.state.client_ip
     logger.debug(f"User IP: {user_ip}; Endpoint: /upload_token; File Name: {file_name}; File Type: {file_type}; File Size: {file_size}")
-    if file_size > int(os.getenv('MAX_FILES_SIZE')):
+    if file_size > max_file_size:
         response.status_code = status.HTTP_413_CONTENT_TOO_LARGE
         logger.warning(f"User IP: {user_ip}; File Name: {file_name}; Exception: The file is too large")
         return BaseResponse(result="The uploaded file is too large", error=True)
