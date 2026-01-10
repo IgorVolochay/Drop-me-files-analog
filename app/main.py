@@ -116,7 +116,7 @@ def health_check():
 
 
 async def main():
-    config = uvicorn.Config("main:app", port=int(os.getenv('BACKEND_PORT')), host="0.0.0.0", log_level="critical")
+    config = uvicorn.Config("main:app", port=int(os.getenv('BACKEND_PORT', 8000)), host="0.0.0.0", log_level="critical")
     server = uvicorn.Server(config)
     await server.serve()
 
