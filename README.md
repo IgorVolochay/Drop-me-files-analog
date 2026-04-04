@@ -2,7 +2,7 @@
 
 Аналог сервиса [dropmefiles.com](https://dropmefiles.com) — веб-приложение для временного обмена файлами с прямой загрузкой в S3-совместимое хранилище.
 
-Попробовать демо: [dropmefiles.viaproger.ru](https://dropmefiles.viaproger.ru/) (временно не работает 😞)
+Попробовать демо: [dropmefiles.viaproger.ru](https://dropmefiles.viaproger.ru/)
 
 ## 📋 Описание
 
